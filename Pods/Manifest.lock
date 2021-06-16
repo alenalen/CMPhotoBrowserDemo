@@ -1,0 +1,46 @@
+PODS:
+  - CMPhotoBrowser (0.0.1):
+    - SDWebImage
+    - SDWebImageFLPlugin
+    - ZFPlayer
+    - ZFPlayer/AVPlayer
+    - ZFPlayer/ControlView
+  - FLAnimatedImage (1.0.16)
+  - SDWebImage (5.11.1):
+    - SDWebImage/Core (= 5.11.1)
+  - SDWebImage/Core (5.11.1)
+  - SDWebImageFLPlugin (0.5.0):
+    - FLAnimatedImage (>= 1.0.11)
+    - SDWebImage/Core (~> 5.10)
+  - ZFPlayer (4.0.1):
+    - ZFPlayer/Core (= 4.0.1)
+  - ZFPlayer/AVPlayer (4.0.1):
+    - ZFPlayer/Core
+  - ZFPlayer/ControlView (4.0.1):
+    - ZFPlayer/Core
+  - ZFPlayer/Core (4.0.1)
+
+DEPENDENCIES:
+  - CMPhotoBrowser (from `./LocalLib/CMPhotoBrowser`)
+
+SPEC REPOS:
+  trunk:
+    - FLAnimatedImage
+    - SDWebImage
+    - SDWebImageFLPlugin
+    - ZFPlayer
+
+EXTERNAL SOURCES:
+  CMPhotoBrowser:
+    :path: "./LocalLib/CMPhotoBrowser"
+
+SPEC CHECKSUMS:
+  CMPhotoBrowser: 1113b3c45aabdd83d34b00e9e15b496c4d299643
+  FLAnimatedImage: 8f3e854ebf9680b71f0b6e700939687fc4d82b4b
+  SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
+  SDWebImageFLPlugin: 245c7ce1e77028b6ef415240847b3f8aa4b106b7
+  ZFPlayer: f88787c815f7b0801279c42f131a89e2823e669e
+
+PODFILE CHECKSUM: 65b288ee5f58e037abdd350cf13ac4d978c3efaa
+
+COCOAPODS: 1.10.0
