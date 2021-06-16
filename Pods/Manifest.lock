@@ -35,7 +35,7 @@ EXTERNAL SOURCES:
     :path: "./LocalLib/CMPhotoBrowser"
 
 SPEC CHECKSUMS:
-  CMPhotoBrowser: 1113b3c45aabdd83d34b00e9e15b496c4d299643
+  CMPhotoBrowser: 2aa0d9e8f47faf8b9cf353f5e02cd239862db235
   FLAnimatedImage: 8f3e854ebf9680b71f0b6e700939687fc4d82b4b
   SDWebImage: a7f831e1a65eb5e285e3fb046a23fcfbf08e696d
   SDWebImageFLPlugin: 245c7ce1e77028b6ef415240847b3f8aa4b106b7

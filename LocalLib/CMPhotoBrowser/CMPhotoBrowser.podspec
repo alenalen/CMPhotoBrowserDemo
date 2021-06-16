@@ -27,10 +27,14 @@ Pod::Spec.new do |spec|
   spec.static_framework = true
   spec.requires_arc = true
 
-  spec.resource_bundles = {
-    'CMPhotoBrowser' => ['Classes/*.*']
-  }
+#  spec.resource_bundles = {
+#    'CMPhotoBrowser' => ['Classes/*.*']
+#  }
 
+  spec.resource_bundles = {
+    'CMPhotoBrowser' => ['Assets/*.*']
+  }
+  
   spec.dependency 'ZFPlayer'
   spec.dependency 'ZFPlayer/ControlView'
   spec.dependency 'ZFPlayer/AVPlayer'
