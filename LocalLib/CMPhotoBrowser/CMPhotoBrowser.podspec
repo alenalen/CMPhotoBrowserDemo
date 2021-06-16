@@ -12,7 +12,7 @@ Pod::Spec.new do |spec|
   spec.summary      = "图片浏览组件"
 
   spec.description  = "A short description of CMPhotoBrowser."
-  spec.homepage     = "https://github.com/alenalen/CMPhotoBrowserDemo.git"
+  spec.homepage     = "https://github.com/alenalen/"
   spec.license      = "LICENSE"
   spec.author             = { "allen" => "595004044@qq.com" }
   spec.source       = { :git => "https://github.com/alenalen/CMPhotoBrowserDemo.git", :tag => "0.0.1" }
