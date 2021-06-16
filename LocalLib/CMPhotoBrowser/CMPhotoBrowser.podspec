@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
 
   spec.name         = "CMPhotoBrowser"
   spec.version      = "0.0.1"
-  spec.summary      = "图片"
+  spec.summary      = "图片浏览组件"
 
   spec.description  = "A short description of CMPhotoBrowser."
   spec.homepage     = "https://github.com/alenalen/CMPhotoBrowserDemo.git"
