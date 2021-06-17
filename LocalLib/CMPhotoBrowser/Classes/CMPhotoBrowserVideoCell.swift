@@ -10,6 +10,184 @@ import UIKit
 import ZFPlayer
 
 class CMPhotoBrowserVideoCell: UICollectionViewCell {
+    deinit {
+        self.player?.stop()
+        CMPhotoBrowserLog.low("deinit - \(self.classForCoder)")
+    }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+        makeConstraints()
+        loadZFPlayer()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        self.backgroundColor = .clear
+        self.contentView.backgroundColor = .clear
+        self.contentView.addSubview(scrollView)
+        scrollView.addSubview(imageView)
+        //scrollView.addSubview(blurView)
+        scrollView.addSubview(playOrPauseBtn)
+        scrollView.delegate = self
+        /// 拖动手势
+        addPanGesture()
+//        // 双击手势
+//        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(onDoubleTap(_:)))
+//        doubleTap.numberOfTapsRequired = 2
+//        addGestureRecognizer(doubleTap)
+//
+//        // 单击手势
+//        let singleTap = UITapGestureRecognizer(target: self, action: #selector(onSingleTap(_:)))
+//        singleTap.require(toFail: doubleTap)
+//        addGestureRecognizer(singleTap)
+//
+    }
+    
+    private func makeConstraints() { }
+    
+    private func loadZFPlayer()  {
+        let playerManager = ZFAVPlayerManager()
+        player = ZFPlayerController(playerManager: playerManager, containerView: imageView)
+        player?.controlView = controlView
+        player?.shouldAutoPlay = false
+        player?.allowOrentitaionRotation = false
+        //player?.disablePanMovingDirection = .all
+        player?.disableGestureTypes = [.singleTap,.pan,.pinch]
+        player?.playerDisapperaPercent = 1.0
+    
+        player?.playerPlayStateChanged = { [weak self] (manager, playState) in
+            CMPhotoBrowserLog.low(playState)
+            if playState == .playStatePlaying  {
+                self?.playOrPauseBtn.isHidden = true
+                self?.playOrPauseBtn.isSelected = true
+            } else if playState == .playStatePlayStopped || playState == .playStatePaused {
+                self?.playOrPauseBtn.isHidden = false
+                self?.playOrPauseBtn.isSelected = false
+            } 
+        }
+        
+        player?.presentationSizeChanged = { [weak self] (playBack, size)in
+            let widht:CGFloat = size.width > (self?.frame.width ?? UIScreen.main.bounds.size.width) ? (self?.frame.width ?? UIScreen.main.bounds.size.width) : size.width
+            let height:CGFloat = size.height > (self?.frame.height ?? UIScreen.main.bounds.size.height) ? (self?.frame.height ?? UIScreen.main.bounds.size.height) : size.height
+            self?.imageView.bounds.size = CGSize(width: widht, height: height)
+        }
+        
+        playerManager.shouldAutoPlay = false
+    }
+    
+    func playUrl(_ url: URL?, isNeedPlay: Bool = false) {
+        if self.currentVideoUrl != nil && model?.videoUrl == self.currentVideoUrl {
+            CMPhotoBrowserLog.low("playUrl-设置播放资源相同，不需要重置 assetURL：\(self.currentVideoUrl ?? "")")
+            self.controlView.show(title: "", coverUrl: model?.imgUrl ?? "")
+            if isNeedPlay {
+                self.player?.currentPlayerManager.play()
+            }
+            return
+        }
+        if let videoUrl = model?.videoUrl, let url = URL(string: videoUrl) {
+            self.currentVideoUrl = videoUrl
+            self.player?.currentPlayerManager.assetURL = url
+            CMPhotoBrowserLog.low("playUrl-设置播放资源：\(url)")
+            self.controlView.show(title: "", coverUrl: model?.imgUrl ?? "")
+            if isNeedPlay {
+                self.player?.currentPlayerManager.play()
+            }
+        }
+    }
+    
+    func stopPlayer() {
+        if self.player?.currentPlayerManager.isPlaying == true {
+            self.player?.currentPlayerManager.pause()
+            self.player?.currentPlayerManager.seek(toTime: 0, completionHandler: nil)
+            playOrPauseBtn.isSelected = false
+            playOrPauseBtn.isHidden = false
+            controlView.show(title: "", coverUrl: model?.imgUrl ?? "")
+            CMPhotoBrowserLog.low("滑动 停止播放")
+        }
+    }
+    
+    /// 播放暂停
+    @objc func playPauseButtonClickAction(_ sender: UIButton) {
+        playOrPause()
+    }
+    
+    private func playOrPause(){
+        guard let player = self.player else {
+            return
+        }
+        self.playOrPauseBtn.isSelected = !self.playOrPauseBtn.isSelected
+        if self.playOrPauseBtn.isSelected == true {
+            if player.currentPlayerManager.playState == .playStatePlayStopped {
+                player.currentPlayerManager.replay()
+            } else if player.currentPlayerManager.playState == .playStatePlayFailed {
+                self.playUrl(nil)
+            } else {
+                player.currentPlayerManager.play()
+            }
+        } else {
+            player.currentPlayerManager.pause()
+        }
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        scrollView.frame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height)
+        scrollView.setZoomScale(1.0, animated: false)
+        let size = computeImageLayoutSize(for: imageView.image, in: scrollView)
+        let origin = computeImageLayoutOrigin(for: size, in: scrollView)
+        imageView.frame = CGRect(origin: origin, size: size)
+        scrollView.setZoomScale(1.0, animated: false)
+        playOrPauseBtn.zf_centerX = imageView.zf_centerX
+        playOrPauseBtn.zf_centerY = imageView.zf_centerY
+    }
+    
+    weak var photoBrowserView: CMPhotoBrowserView?
+    /// 弱引用PhotoBrowser
+    weak var photoBrowser: CMPhotoBrowser?
+    
+    
+    /// 记录当前进入活动到的数据源，如果是视频，自动播放
+    var index: Int = 0
+    
+    private var currentVideoUrl: String?
+    
+    var model: CMPhotoBrowserModel? {
+        didSet {
+            let size = self.imageView.bounds.size == .zero ? self.frame.size : self.imageView.bounds.size
+            let image = ZFUtilities.image(with: UIColor(red: 220/255.0, green: 220/255.0, blue: 220/255.0, alpha: 1.0), size: size)
+            if model?.imgUrl.isEmpty == false {
+                self.imageView.setImageWithURLString(model?.imgUrl, placeholder: image)
+            } else {
+                self.imageView.image = image
+            }
+        }
+    }
+    
+    // 长按事件
+    typealias LongPressAction = (CMPhotoBrowserVideoCell, UILongPressGestureRecognizer) -> Void
+    
+    /// 长按时回调。赋值时自动添加手势，赋值为nil时移除手势
+    var longPressedAction: LongPressAction? {
+        didSet {
+            if oldValue != nil && longPressedAction == nil {
+                removeGestureRecognizer(longPress)
+            } else if oldValue == nil && longPressedAction != nil {
+                addGestureRecognizer(longPress)
+            }
+        }
+    }
+    
+    /// 已添加的长按手势
+    private lazy var longPress: UILongPressGestureRecognizer = {
+        return UILongPressGestureRecognizer(target: self, action: #selector(onLongPress(_:)))
+    }()
+    
+    private weak var existedPan: UIPanGestureRecognizer?
     
     var player: ZFPlayerController?
     lazy var controlView: CMPhotoBrowserVideoControlView = {
@@ -18,21 +196,6 @@ class CMPhotoBrowserVideoCell: UICollectionViewCell {
         return view
     }()
         
-    weak var photoBrowserView: CMPhotoBrowserView?
-    /// 弱引用PhotoBrowser
-    weak var photoBrowser: CMPhotoBrowser?
-    
-    var videoUrl: String?
-    
-    var imgeViewUrl: String? {
-        didSet{
-            if imgeViewUrl?.isEmpty == false {
-                let image = ZFUtilities.image(with: UIColor(red: 220/255.0, green: 220/255.0, blue: 220/255.0, alpha: 1.0), size: self.imageView.bounds.size)
-                self.imageView.setImageWithURLString(imgeViewUrl, placeholder: image)
-            }
-        }
-    }
-    
     private lazy var imageView: CMPhotoBrowserImageView = {
         let imageView = CMPhotoBrowserImageView()
         imageView.clipsToBounds = true
@@ -44,7 +207,6 @@ class CMPhotoBrowserVideoCell: UICollectionViewCell {
         return imageView
     }()
     
-    var index: Int = 0
     
     lazy var scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -89,162 +251,9 @@ class CMPhotoBrowserVideoCell: UICollectionViewCell {
     
     /// 记录pan手势开始时，手势位置
     private var beganTouch = CGPoint.zero
-    
-    deinit {
-        self.player?.stop()
-        CMPhotoBrowserLog.low("deinit - \(self.classForCoder)")
-    }
+}
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupUI()
-        makeConstraints()
-        loadZFPlayer()
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    private func setupUI() {
-        self.backgroundColor = .clear
-        self.contentView.backgroundColor = .clear
-        self.contentView.addSubview(scrollView)
-        scrollView.addSubview(imageView)
-        //scrollView.addSubview(blurView)
-        scrollView.addSubview(playOrPauseBtn)
-        scrollView.delegate = self
-        /// 拖动手势
-        addPanGesture()
-        
-//        // 双击手势
-//        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(onDoubleTap(_:)))
-//        doubleTap.numberOfTapsRequired = 2
-//        addGestureRecognizer(doubleTap)
-//
-//        // 单击手势
-//        let singleTap = UITapGestureRecognizer(target: self, action: #selector(onSingleTap(_:)))
-//        singleTap.require(toFail: doubleTap)
-//        addGestureRecognizer(singleTap)
-//
-    }
-    
-    private func makeConstraints()  {
-//        scrollView.snp.makeConstraints { make in
-//            make.left.right.bottom.top.equalToSuperview()
-//        }
-//
-//        imageView.snp.makeConstraints { make in
-//            make.left.right.bottom.top.equalToSuperview()
-//        }
-        
-//        self.playOrPauseBtn.snp.makeConstraints { make in
-//            make.size.equalTo(CGSize(width: 60, height: 60))
-//            make.center.equalTo(self.imageView.snp.center)
-//        }
-//        self.blurView.snp.makeConstraints { make in
-//            make.left.right.bottom.top.equalTo(imageView)
-//        }
-    }
-    
-    
-    private func loadZFPlayer()  {
-        let playerManager = ZFAVPlayerManager()
-        player = ZFPlayerController(playerManager: playerManager, containerView: imageView)
-        player?.controlView = controlView
-        player?.shouldAutoPlay = false
-        player?.allowOrentitaionRotation = false
-        //player?.disablePanMovingDirection = .all
-        player?.disableGestureTypes = [.singleTap,.pan,.pinch]
-        player?.playerDisapperaPercent = 1.0
-    
-        player?.playerPlayStateChanged = { [weak self] (manager, playState) in
-            CMPhotoBrowserLog.low(playState)
-            if playState == .playStatePlaying  {
-                self?.playOrPauseBtn.isHidden = true
-                self?.playOrPauseBtn.isSelected = true
-            } else if playState == .playStatePlayStopped || playState == .playStatePaused {
-                self?.playOrPauseBtn.isHidden = false
-                self?.playOrPauseBtn.isSelected = false
-            } 
-        }
-        playerManager.shouldAutoPlay = false
-        
-    }
-    
-    func playUrl(_ url: URL?) {
-        if let videoUrl = self.videoUrl, let url = URL(string: videoUrl) {
-            self.player?.currentPlayerManager.assetURL = url
-            CMPhotoBrowserLog.low("设置播放资源：\(url)")
-            self.controlView.show(title: "", coverUrl: self.imgeViewUrl ?? "")
-        }
-    }
-    
-    func stopPlayer() {
-        self.player?.currentPlayerManager.pause()
-        self.player?.currentPlayerManager.seek(toTime: 0, completionHandler: nil)
-        playOrPauseBtn.isSelected = false
-        playOrPauseBtn.isHidden = false
-        controlView.show(title: "", coverUrl: self.imgeViewUrl ?? "")
-        CMPhotoBrowserLog.low("滑动 停止播放")
-    }
-    
-    /// 播放暂停
-    @objc func playPauseButtonClickAction(_ sender: UIButton) {
-        playOrPause()
-    }
-    
-    private func playOrPause(){
-        guard let player = self.player else {
-            return
-        }
-        self.playOrPauseBtn.isSelected = !self.playOrPauseBtn.isSelected
-        if self.playOrPauseBtn.isSelected == true {
-            if player.currentPlayerManager.playState == .playStatePlayStopped {
-                player.currentPlayerManager.replay()
-            } else if player.currentPlayerManager.playState == .playStatePlayFailed {
-                self.playUrl(nil)
-            } else {
-                player.currentPlayerManager.play()
-            }
-        } else {
-            player.currentPlayerManager.pause()
-        }
-    }
-    
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        scrollView.frame = CGRect(x: 0, y: 0, width: bounds.size.width, height: bounds.size.height)
-        scrollView.setZoomScale(1.0, animated: false)
-        let size = computeImageLayoutSize(for: imageView.image, in: scrollView)
-        let origin = computeImageLayoutOrigin(for: size, in: scrollView)
-        imageView.frame = CGRect(origin: origin, size: size)
-        scrollView.setZoomScale(1.0, animated: false)
-        playOrPauseBtn.zf_centerX = imageView.zf_centerX
-        playOrPauseBtn.zf_centerY = imageView.zf_centerY
-    }
-    
-    // 长按事件
-    typealias LongPressAction = (CMPhotoBrowserVideoCell, UILongPressGestureRecognizer) -> Void
-    
-    /// 长按时回调。赋值时自动添加手势，赋值为nil时移除手势
-    var longPressedAction: LongPressAction? {
-        didSet {
-            if oldValue != nil && longPressedAction == nil {
-                removeGestureRecognizer(longPress)
-            } else if oldValue == nil && longPressedAction != nil {
-                addGestureRecognizer(longPress)
-            }
-        }
-    }
-    
-    /// 已添加的长按手势
-    private lazy var longPress: UILongPressGestureRecognizer = {
-        return UILongPressGestureRecognizer(target: self, action: #selector(onLongPress(_:)))
-    }()
-    
-    private weak var existedPan: UIPanGestureRecognizer?
-    
+extension CMPhotoBrowserVideoCell {
     /// 添加拖动手势
     open func addPanGesture() {
         guard existedPan == nil else {
@@ -346,10 +355,14 @@ extension CMPhotoBrowserVideoCell {
             let result = panResult(pan)
             CMPhotoBrowserLog.low("panResult(pan):\(result)")
             imageView.frame = result.frame
+            playOrPauseBtn.zf_centerX = imageView.zf_centerX
+            playOrPauseBtn.zf_centerY = imageView.zf_centerY
             photoBrowser?.maskView.alpha = result.scale * result.scale
             photoBrowser?.setStatusBar(hidden: result.scale > 0.99)
         case .ended, .cancelled:
             imageView.frame = panResult(pan).frame
+            playOrPauseBtn.zf_centerX = imageView.zf_centerX
+            playOrPauseBtn.zf_centerY = imageView.zf_centerY
             CMPhotoBrowserLog.low("imageView.frame:" + "\(imageView.frame)")
             let isDown = pan.velocity(in: self).y > 0
             if isDown {
@@ -399,6 +412,8 @@ extension CMPhotoBrowserVideoCell {
             if needResetSize {
                 self.imageView.bounds.size = size
             }
+            self.playOrPauseBtn.zf_centerX = self.imageView.zf_centerX
+            self.playOrPauseBtn.zf_centerY = self.imageView.zf_centerY
         }
     }
 }

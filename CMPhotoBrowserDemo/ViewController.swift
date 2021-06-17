@@ -25,11 +25,16 @@ class ViewController: UIViewController {
 //            da.append(mod)
 //        }
         
-        let mod4 = CMPhotoBrowserModel(imgUrl: "http://ww3.sinaimg.cn/bmiddle/7ef8e115jw1f972pb91fng206o06odqk.gif", videoUrl: nil)
-        da.append(mod4)
+//        let mod4 = CMPhotoBrowserModel(imgUrl: "http://ww3.sinaimg.cn/bmiddle/7ef8e115jw1f972pb91fng206o06odqk.gif", videoUrl: nil)
+//        da.append(mod4)
         
         let mod1 = CMPhotoBrowserModel(imgUrl: "https://wx3.sinaimg.cn/mw690/6852466cly1gjxxryaucnj216o1ryhdt.jpg", videoUrl: nil)
         da.append(mod1)
+        
+        
+        let mod5 = CMPhotoBrowserModel(imgUrl: "https://dev-cdn-common.codemao.cn/test/266/teaching/medal/certificate/1616132096_745985c3-b78e-456f-951b-f158fcbf052f_227.jpg", videoUrl: "https://www.apple.com/105/media/cn/mac/family/2018/46c4b917_abfd_45a3_9b51_4e3054191797/films/bruce/mac-bruce-tpl-cn-2018_1280x720h.mp4")
+        da.append(mod5)
+       
         if let url0 = Bundle.main.url(forResource: "video_0", withExtension: "MP4") {
             let mod = CMPhotoBrowserModel(imgUrl: "https://wx2.sinaimg.cn/mw690/6852466cly1gjxxru82uij216o1ryx4c.jpg", videoUrl: url0.absoluteString)
             da.append(mod)
@@ -56,7 +61,7 @@ class ViewController: UIViewController {
     }()
 
     @IBAction func showAction(_ sender: Any) {
-        CMPhotoBrowser.show(self, dataSource: self.data)
+        CMPhotoBrowser.show(self, dataSource: self.data, index: 3)
     }
     
 }

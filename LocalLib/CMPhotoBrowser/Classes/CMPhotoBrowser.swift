@@ -24,10 +24,8 @@ open class CMPhotoBrowser: UIViewController, UIViewControllerTransitioningDelega
     
     private lazy var isStatusBarHidden = true
     
-    
     /// 主视图
-    var browserView = CMPhotoBrowserView()
-    lazy var dataSource = [CMPhotoBrowserModel]()
+    lazy var browserView = CMPhotoBrowserView()
     
     deinit {
         CMPhotoBrowserLog.low("deinit - \(self.classForCoder)")
@@ -48,16 +46,29 @@ open class CMPhotoBrowser: UIViewController, UIViewControllerTransitioningDelega
         return isStatusBarHidden
     }
     
+    open override var supportedInterfaceOrientations: UIInterfaceOrientationMask{
+        return .landscape
+    }
+    
+    open override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation{
+        return .landscapeLeft
+    }
+    
+    open override var shouldAutorotate: Bool{
+        return true
+    }
+    
+    
     open override func viewDidLoad() {
         super.viewDidLoad()
-        CMPhotoBrowserLog.level = .low
+        CMPhotoBrowserLog.level = .forbidden
         setupUI()
         makeConstraints()
-        self.browserView.reloadData(self.dataSource)
     }
     
     open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        self.browserView.reloadData()
     }
     
     open override func viewWillLayoutSubviews() {
@@ -67,6 +78,7 @@ open class CMPhotoBrowser: UIViewController, UIViewControllerTransitioningDelega
     }
     
     private func setupUI(){
+        self.automaticallyAdjustsScrollViewInsets = false
         maskView.frame = .zero
         self.view.addSubview(maskView)
         transitionAnimator.photoBrowser = self
@@ -94,9 +106,15 @@ open class CMPhotoBrowser: UIViewController, UIViewControllerTransitioningDelega
     /// - Parameters:
     ///   - fromVC: UIViewController
     ///   - dataSource: [CMPhotoBrowserModel]
-    public static func show(_ fromVC: UIViewController?, dataSource: [CMPhotoBrowserModel]) {
+    ///   - index: 显示第几个
+    public static func show(_ fromVC: UIViewController?, dataSource: [CMPhotoBrowserModel], index: Int = 0) {
+        if dataSource.count == 0 {
+            CMPhotoBrowserLog.low("dataSource：数据源为空")
+            return
+        }
         let toVC = CMPhotoBrowser()
-        toVC.dataSource = dataSource
+        toVC.browserView.index = index
+        toVC.browserView.dataSource = dataSource
         toVC.modalPresentationStyle = .custom
         toVC.modalPresentationCapturesStatusBarAppearance = true
         toVC.transitioningDelegate = toVC

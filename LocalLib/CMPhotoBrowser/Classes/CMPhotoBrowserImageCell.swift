@@ -94,15 +94,7 @@ class CMPhotoBrowserImageCell: UICollectionViewCell {
         
     }
     
-    private func makeConstraints()  {
-//        scrollView.snp.makeConstraints { make in
-//            make.left.right.bottom.top.equalToSuperview()
-//        }
-//
-//        imageView.snp.makeConstraints { make in
-//            make.left.right.bottom.top.equalToSuperview()
-//        }
-    }
+    private func makeConstraints() {}
     
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -239,13 +231,13 @@ extension CMPhotoBrowserImageCell {
             beganTouch = pan.location(in: scrollView)
         case .changed:
             let result = panResult(pan)
-            print("panResult(pan):\(result)")
+            CMPhotoBrowserLog.low("panResult(pan):\(result)")
             imageView.frame = result.frame
             photoBrowser?.maskView.alpha = result.scale * result.scale
             photoBrowser?.setStatusBar(hidden: result.scale > 0.99)
         case .ended, .cancelled:
             imageView.frame = panResult(pan).frame
-            print("imageView.frame:" + "\(imageView.frame)")
+            CMPhotoBrowserLog.low("imageView.frame:" + "\(imageView.frame)")
 
             let isDown = pan.velocity(in: self).y > 0
             if isDown {
